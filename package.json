@@ -1,0 +1,16 @@
+{
+  "name": "deact",
+  "version": "1.0.0",
+  "main": "index.js",
+  "browser": "dist/index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c --watch"
+  },
+  "devDependencies": {
+    "rollup": "^1.10.0",
+    "rollup-plugin-typescript2": "^0.20.1",
+    "typescript": "^3.4.3"
+  }
+}

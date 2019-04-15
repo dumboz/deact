@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+    <style>
+      .active {
+        color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="/dist/index.js"></script>
+    <script>
+      const app = document.getElementById("app");
+      const render = Deact.render;
+      const h = Deact.createElement;
+      const useState = Deact.useState;
+
+      function Click({ className, initCount }) {
+        const [count, setCount] = useState(initCount);
+        const [active, setActive] = useState(false);
+        const handleClick = () => {
+          setCount(count + 1);
+        };
+
+        const handleToggleActive = () => {
+          setActive(!active);
+        };
+
+        return h(
+          "div",
+          { className },
+          h(
+            "div",
+            {},
+            h("span", { className: active ? "active" : "" }, "count:"),
+            String(count),
+            h("button", { onClick: handleClick }, "increase")
+          ),
+          h("button", { onClick: handleToggleActive }, "click me")
+        );
+      }
+
+      render(
+        h(
+          "div",
+          {},
+          h(Click, { className: "red", initCount: 6 }),
+          h("span", {}, "This will not rerender")
+        ),
+        app
+      );
+    </script>
+  </body>
+</html>
