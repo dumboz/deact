@@ -15,9 +15,7 @@
           args[_i - 2] = arguments[_i];
       }
       var children = args.length > 0
-          ? args
-              .filter(function (x) { return !!x; })
-              .map(function (e) { return (typeof e === "string" ? createTextElement(e) : e); })
+          ? args.map(function (e) { return (typeof e === "string" ? createTextElement(e) : e); })
           : null;
       var props = Object.assign({}, config, {
           children: children
@@ -76,15 +74,15 @@
   var count = 0;
   var useState = function (initState) {
       if (!instanceState.get(currentlyRenderedInstance)[count]) {
-          instanceState.get(currentlyRenderedInstance)[count] = initState;
+          var setState = (function (count) { return function (state) {
+              instanceState.get(currentlyRenderedInstance)[count][0] = state;
+              reconcile(currentlyRenderedInstance.dom.parentElement, currentlyRenderedInstance, currentlyRenderedInstance.element);
+          }; })(count);
+          instanceState.get(currentlyRenderedInstance)[count] = [initState, setState];
       }
-      var state = instanceState.get(currentlyRenderedInstance)[count];
-      var setState = (function (count) { return function (state) {
-          instanceState.get(currentlyRenderedInstance)[count] = state;
-          reconcile(currentlyRenderedInstance.dom.parentElement, currentlyRenderedInstance, currentlyRenderedInstance.element);
-      }; })(count);
+      var res = instanceState.get(currentlyRenderedInstance)[count];
       count++;
-      return [state, setState];
+      return res;
   };
   var setCurrentlyRenderedInstance = function (instance) {
       currentlyRenderedInstance = instance;
@@ -95,6 +93,9 @@
   };
 
   var instantiate = function (element) {
+      if (!element) {
+          return null;
+      }
       if (isIntristicElement(element)) {
           var dom_1 = element.type === "TEXT ELEMENT"
               ? document.createTextNode("")
@@ -102,7 +103,9 @@
           updateDomProperties(dom_1, {}, element.props);
           var childElements = element.props.children || [];
           var childInstances = childElements.map(instantiate);
-          childInstances.forEach(function (childInstance) {
+          childInstances
+              .filter(function (c) { return !!c; })
+              .forEach(function (childInstance) {
               dom_1.appendChild(childInstance.dom);
           });
           var instance = {};
@@ -116,6 +119,9 @@
           setCurrentlyRenderedInstance(instance);
           var childElement = element.type(element.props);
           var childInstance = instantiate(childElement);
+          if (!childInstance) {
+              return null;
+          }
           instance.dom = childInstance.dom;
           instance.element = element;
           instance.childInstance = childInstance;
@@ -123,10 +129,14 @@
       }
   };
 
-  var reconcile = function (parentDom, instance, element) {
-      if (!instance) {
+  var reconcile = function (parentDom, instance, element, pos) {
+      if (pos === void 0) { pos = null; }
+      if (!instance && !element) {
+          return null;
+      }
+      else if (!instance) {
           var nextInstance = instantiate(element);
-          parentDom.appendChild(nextInstance.dom);
+          parentDom.insertBefore(nextInstance.dom, pos);
           return nextInstance;
       }
       else if (!element) {
@@ -147,10 +157,17 @@
           var childInstances = [];
           var count = Math.max(oldChildInstances.length, childElements.length);
           for (var i = 0; i < count; i++) {
-              var childInstance = reconcile(instance.dom, oldChildInstances[i], childElements[i]);
+              var insertPos = null;
+              for (var insertIdx = i; insertIdx < oldChildInstances.length; insertIdx++) {
+                  if (oldChildInstances[insertIdx] && oldChildInstances[insertIdx].dom) {
+                      insertPos = oldChildInstances[insertIdx].dom;
+                      break;
+                  }
+              }
+              var childInstance = reconcile(instance.dom, oldChildInstances[i], childElements[i], insertPos);
               childInstances.push(childInstance);
           }
-          instance.childInstances = childInstances.filter(function (c) { return !!c; });
+          instance.childInstances = childInstances;
           return instance;
       }
       else {

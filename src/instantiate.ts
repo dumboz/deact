@@ -2,6 +2,9 @@ import { isIntristicElement, updateDomProperties } from "./utils";
 import { setCurrentlyRenderedInstance } from "./useState";
 
 const instantiate = (element: DeactElement): DeactInstance => {
+  if (!element) {
+    return null;
+  }
   if (isIntristicElement(element)) {
     const dom =
       element.type === "TEXT ELEMENT"
@@ -13,9 +16,11 @@ const instantiate = (element: DeactElement): DeactInstance => {
     const childElements = element.props.children || [];
     const childInstances = childElements.map(instantiate);
 
-    childInstances.forEach(childInstance => {
-      dom.appendChild(childInstance.dom);
-    });
+    childInstances
+      .filter(c => !!c)
+      .forEach(childInstance => {
+        dom.appendChild(childInstance.dom);
+      });
 
     let instance = <DeactIntristicInstance>{};
     instance.dom = dom;
@@ -27,6 +32,9 @@ const instantiate = (element: DeactElement): DeactInstance => {
     setCurrentlyRenderedInstance(instance);
     const childElement = element.type(element.props);
     const childInstance = instantiate(childElement);
+    if (!childInstance) {
+      return null;
+    }
     instance.dom = childInstance.dom;
     instance.element = element;
     instance.childInstance = childInstance;

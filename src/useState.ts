@@ -8,23 +8,23 @@ let count = 0;
 
 const useState = (initState: any) => {
   if (!instanceState.get(currentlyRenderedInstance)[count]) {
-    instanceState.get(currentlyRenderedInstance)[count] = initState;
+    const setState = (count => (state: any) => {
+      instanceState.get(currentlyRenderedInstance)[count][0] = state;
+      reconcile(
+        currentlyRenderedInstance.dom.parentElement,
+        currentlyRenderedInstance,
+        currentlyRenderedInstance.element
+      );
+    })(count);
+
+    instanceState.get(currentlyRenderedInstance)[count] = [initState, setState];
   }
 
-  const state = instanceState.get(currentlyRenderedInstance)[count];
-
-  const setState = (count => (state: any) => {
-    instanceState.get(currentlyRenderedInstance)[count] = state;
-    reconcile(
-      currentlyRenderedInstance.dom.parentElement,
-      currentlyRenderedInstance,
-      currentlyRenderedInstance.element
-    );
-  })(count);
+  const res = instanceState.get(currentlyRenderedInstance)[count];
 
   count++;
 
-  return [state, setState];
+  return res;
 };
 
 export const setCurrentlyRenderedInstance = (instance: DeactInstance) => {

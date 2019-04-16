@@ -22,7 +22,7 @@
 
       function Click({ className, initCount }) {
         const [count, setCount] = useState(initCount);
-        const [active, setActive] = useState(false);
+        const [active, setActive] = useState(true);
         const handleClick = () => {
           setCount(count + 1);
         };
@@ -41,17 +41,14 @@
             String(count),
             h("button", { onClick: handleClick }, "increase")
           ),
-          h("button", { onClick: handleToggleActive }, "click me")
+          active && "active",
+          h("button", { onClick: handleToggleActive }, "click me"),
+          active && "hello"
         );
       }
 
       render(
-        h(
-          "div",
-          {},
           h(Click, { className: "red", initCount: 6 }),
-          h("span", {}, "This will not rerender")
-        ),
         app
       );
     </script>

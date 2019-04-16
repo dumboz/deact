@@ -9,11 +9,14 @@ import { setCurrentlyRenderedInstance } from "./useState";
 const reconcile = (
   parentDom: HTMLElement,
   instance: DeactInstance,
-  element: DeactElement
+  element: DeactElement,
+  pos: Node = null
 ): DeactInstance => {
-  if (!instance) {
+  if (!instance && !element) {
+    return null;
+  } else if (!instance) {
     const nextInstance = instantiate(element);
-    parentDom.appendChild(nextInstance.dom);
+    parentDom.insertBefore(nextInstance.dom, pos);
     return nextInstance;
   } else if (!element) {
     parentDom.removeChild(instance.dom);
@@ -35,15 +38,25 @@ const reconcile = (
     const count = Math.max(oldChildInstances.length, childElements.length);
 
     for (let i = 0; i < count; i++) {
+      let insertPos = null;
+
+      for (let insertIdx = i; insertIdx < oldChildInstances.length; insertIdx ++ ){
+        if (oldChildInstances[insertIdx] && oldChildInstances[insertIdx].dom) {
+          insertPos = oldChildInstances[insertIdx].dom;
+          break;
+        }
+      } 
+
       const childInstance = reconcile(
         <HTMLElement>instance.dom,
         oldChildInstances[i],
-        childElements[i]
+        childElements[i],
+        insertPos
       );
       childInstances.push(childInstance);
     }
 
-    instance.childInstances = childInstances.filter(c => !!c);
+    instance.childInstances = childInstances;
 
     return instance;
   } else {

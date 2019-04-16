@@ -10,9 +10,7 @@ const createElement = (
 ): DeactElement => {
   const children: Array<DeactElement> =
     args.length > 0
-      ? args
-          .filter(x => !!x)
-          .map(e => (typeof e === "string" ? createTextElement(e) : e))
+      ? args.map(e => (typeof e === "string" ? createTextElement(e) : e))
       : null;
 
   const props: Props = Object.assign({}, config, {
